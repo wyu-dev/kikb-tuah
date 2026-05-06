@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="ms" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lucky Draw KIKB</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+        * { font-family: 'Outfit', sans-serif; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 40%, #1e40af 100%);
+        }
+        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,215,0,0.2); }
+        .glass-gold { background: rgba(255,215,0,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,215,0,0.3); }
+        @keyframes shuffle { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.6; transform:scale(0.95); } }
+        @keyframes winner-pop { 0%{ transform:scale(0.3); opacity:0; } 60%{ transform:scale(1.15); } 100%{ transform:scale(1); opacity:1; } }
+        @keyframes rolldown { 0%{ transform: translateY(-100%); opacity: 0; } 50%{ opacity: 1; } 100%{ transform: translateY(0); opacity: 1; } }
+        .shuffling { animation: shuffle 0.1s infinite; }
+        .winner-reveal { animation: winner-pop 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .rolldown-effect { animation: rolldown 0.08s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes pulse-glow {
+            0%,100%{ box-shadow: 0 0 30px rgba(255, 255, 255, 0.35), 0 0 60px rgba(255, 255, 255, 0.2); }
+            50%{ box-shadow: 0 0 60px rgba(255, 255, 255, 0.65), 0 0 100px rgba(255, 255, 255, 0.35); }
+        }
+        .glow-pulse { animation: pulse-glow 2s infinite; }
+
+        /* Logo outer glow effect - white */
+        @keyframes logo-glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))
+                        drop-shadow(0 0 16px rgba(255, 255, 255, 0.6))
+                        drop-shadow(0 0 28px rgba(255, 255, 255, 0.4));
+            }
+            50% {
+                filter: drop-shadow(0 0 14px rgba(255, 255, 255, 1))
+                        drop-shadow(0 0 28px rgba(255, 255, 255, 0.8))
+                        drop-shadow(0 0 48px rgba(255, 255, 255, 0.55));
+            }
+        }
+        .logo-glow {
+            animation: logo-glow 2.5s ease-in-out infinite;
+        }
+
+        /* Gold gradient text for title */
+        .gold-text {
+            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full overflow-auto">
+  <div id="app" class="h-full w-full flex flex-col items-center justify-center p-6 relative">
+   <!-- Header bar: Settings (left) | Sound + Count (right) -->
+   <button onclick="openModal()" class="absolute top-6 left-6 glass rounded-full p-3 text-white/70 hover:text-white transition z-10">
+    <i data-lucide="settings" style="width:24px;height:24px;"></i>
+   </button>
+   <div class="absolute top-6 right-6 flex items-center gap-3 z-10">
+    <button id="btn-sound" onclick="toggleSound()" class="glass rounded-full p-3 text-white/70 hover:text-white transition" title="Toggle bunyi">
+     <i id="sound-icon" data-lucide="volume-2" style="width:24px;height:24px;"></i>
+    </button>
+    <div id="participant-badge" class="glass rounded-full px-5 py-2 text-white/90 text-lg font-semibold flex items-center gap-2">
+     <i data-lucide="users" style="width:20px;height:20px;"></i> <span id="count-display">0 peserta</span>
+    </div>
+   </div>
+   <!-- Logo with outer glow -->
+   <div class="mb-4 mt-4">
+    <img src="https://wyu-dev.github.io/logo/kikb.png" alt="KIKB Logo" class="h-24 md:h-32 object-contain mx-auto logo-glow" loading="lazy" onerror="this.style.display='none';">
+   </div>
+   <!-- Main content -->
+   <div class="text-center mb-8">
+    <h1 id="main-title" class="text-5xl md:text-7xl font-black gold-text tracking-tight mb-2">CABUTAN BERTUAH</h1>
+    <p id="subtitle" class="text-xl md:text-2xl text-white/80 font-semibold">Mesyuarat Agung Tahunan Kali Ke-4</p>
+   </div>
+   <!-- Display card -->
+   <div id="display-card" class="glass-gold rounded-3xl p-10 md:p-16 w-full max-w-3xl text-center mb-8 glow-pulse">
+    <p id="name-display" class="text-3xl md:text-5xl font-black text-white truncate">—</p>
+   </div>
+   <!-- Buttons (moved ABOVE winners history) -->
+   <div id="buttons" class="flex gap-4 flex-wrap justify-center mb-6">
+    <button id="btn-start" onclick="startDraw()" class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-blue-950 font-bold text-xl px-10 py-4 rounded-2xl transition transform hover:scale-105 shadow-lg shadow-amber-500/40">
+     🎲 MULA
+    </button>
+    <button id="btn-next" onclick="nextDraw()" class="hidden bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-xl px-10 py-4 rounded-2xl transition transform hover:scale-105 shadow-lg shadow-blue-500/40 border border-amber-400/30">
+     ⏭️ Cabutan Seterusnya
+    </button>
+   </div>
+   <!-- Winners history (moved BELOW buttons) -->
+   <div id="winners-section" class="hidden w-full max-w-3xl mb-6">
+    <div class="glass rounded-2xl p-4">
+     <h3 class="text-amber-300 font-semibold text-sm uppercase tracking-widest mb-2 flex items-center gap-2">
+      <i data-lucide="trophy" style="width:16px;height:16px;"></i> Pemenang
+     </h3>
+     <div id="winners-list" class="flex flex-wrap gap-2"></div>
+    </div>
+   </div>
+   <!-- Empty state -->
+   <p id="empty-msg" class="text-white/40 mt-2 text-lg hidden">Tiada peserta. Sila tambah nama di tetapan.</p>
+  </div>
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4" style="display:none;">
+   <div class="bg-blue-950 border border-amber-400/30 rounded-3xl p-8 w-full max-w-lg shadow-2xl shadow-amber-500/20 max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-6">
+     <h2 class="text-2xl font-bold text-amber-300">Tetapan Peserta</h2>
+     <button onclick="closeModal()" class="text-white/60 hover:text-white text-2xl">×</button>
+    </div>
+    <label class="text-amber-300 text-sm font-semibold block mb-2" for="names-input">Senarai Nama (satu nama setiap baris)</label>
+    <textarea id="names-input" class="w-full h-56 bg-blue-900/50 border border-blue-700 rounded-xl p-4 text-white text-base resize-none focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Ahmad&#10;Siti&#10;Ali&#10;Fatimah"></textarea>
+    <div class="flex gap-3 mt-4">
+     <button onclick="saveNames()" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-blue-950 font-bold py-3 rounded-xl transition">Simpan</button>
+     <button onclick="loadDefaultList()" class="bg-blue-800 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition text-sm border border-amber-400/20">Senarai KIKB</button>
+    </div>
+    <!-- Reset section -->
+    <div class="mt-6 pt-6 border-t border-amber-400/20">
+     <h3 class="text-amber-300 text-sm font-semibold uppercase tracking-wider mb-3">Tetapan Cabutan</h3>
+     <div class="flex flex-col gap-3">
+      <button onclick="resetUndian()" class="bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-400/30 font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
+       <i data-lucide="rotate-ccw" style="width:18px;height:18px;"></i> Reset Undian (kekalkan senarai)
+      </button>
+      <button onclick="clearAll()" class="bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-400/30 font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
+       <i data-lucide="trash-2" style="width:18px;height:18px;"></i> Reset Semua (padam senarai)
+      </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+        main_title: 'CABUTAN BERTUAH',
+        subtitle: 'Mesyuarat Agung Tahunan Kali Ke-4',
+        background_color: '#0a2463',
+        accent_color: '#fbbf24',
+        text_color: '#ffffff',
+        font_family: 'Outfit',
+        font_size: 16
+    };
+
+    // Default KIKB member list (88 members)
+    const defaultParticipants = [
+        "002 - Tasirihafizan Bin Ab Rahman",
+        "003 - Nur Aimuni Binti Abd.Hadi",
+        "004 - Khairuddin Bin Khamis",
+        "005 - Mohd Azharruddin Bin Abd Aziz",
+        "006 - Maliki Bin Che Yaacob",
+        "007 - Wan Asmawi Bin Wan Shariff",
+        "009 - Fauziah Binti Ahmad Zawawi",
+        "011 - Effa Emilliya Binti Rosli",
+        "013 - Khaizil Sharikie Bin Aripin",
+        "015 - Norrasidah Aini Binti Ismail",
+        "017 - Ernei Fazira Binti Mustafa",
+        "019 - Suzaila Binti Wahab@Wahib",
+        "024 - Ahmad Bustaman Bin Rusli",
+        "027 - Mohd Zulkifly Bin Fiee",
+        "029 - Nor Hayati Binti Abdul Samad",
+        "030 - Noor Hashimah Binti Abu Naim",
+        "031 - Mohd Sokri Bin Safie",
+        "034 - Mohd Razali Bin Ali Din",
+        "035 - Mohd Asri Bin Ahmad Norddin",
+        "036 - Zuriati Binti Osman",
+        "038 - Mohd Marzuki Bin Zainudin",
+        "040 - Muhamad Hafiz Bin Awang",
+        "041 - Norzarina Binti Hamizan",
+        "042 - Zahabar Bin Mohd Salim",
+        "044 - Noor Aini Binti Ahmad",
+        "045 - Nik Rosmizan Bin Muhamed",
+        "048 - Mohd Jaafar Bin Ismail",
+        "050 - Wan Burhanuddin Bin Wan Abd Aziz",
+        "051 - Ahmadi Elmi Bin Mohd Arifin",
+        "052 - Norazmei Bin Abd Malek",
+        "055 - Fathi Safwan Bin Che Yusof",
+        "056 - Mohd Noor Bin Razali@Sulong",
+        "057 - Syamsurizal Bin Desa",
+        "059 - Edy Syahrul Bin Omar",
+        "060 - Ahmad Munir Bin Ahmad Mujor",
+        "065 - Suhana Binti Mokhtar",
+        "066 - Wahyuddin Bin Mohd Yusof",
+        "070 - Mohd Rauf Bin Ali Khan",
+        "071 - Shahrizal Bin Abu Bakar",
+        "072 - Wan Mohd Helmi Bin Wan Jusoh",
+        "073 - Mohd Fazzul Fitry Bin Abu Bakar",
+        "074 - Mohd Badarudin Bin Sulong",
+        "076 - Mohd Azizul Bin Junoh",
+        "079 - Mohamad Bin Ibrahim",
+        "080 - Muhammad Rudy Bin Jefri",
+        "083 - Mat Naser Bin Mat",
+        "085 - Mohd Shahrizal Bin Yusof",
+        "087 - Mohd Shaharin Bin Omar",
+        "089 - Saharni Binti Abdullah",
+        "093 - Mohd Amri Bin Md Daud",
+        "095 - Khairul bin Ab Rahman",
+        "097 - Nor Ashikin Binti Abd Ghani",
+        "099 - Norakmal Bin Maamor",
+        "100 - Nadiah Binti Jaafar",
+        "102 - Mohammad Akhmal Bin Mohamed Supian",
+        "103 - Asilah Bt Mustafar",
+        "104 - Nurul Nadiah Binti Ab Wahab",
+        "105 - Azhar Bin Ahmad Zaki",
+        "106 - Noraida Binti Ismail",
+        "107 - Saiful Bahari Bin Mohd Rasid",
+        "109 - Fakharul Zaman Bin Fauzi",
+        "110 - Suhaimi Bin Kamarudin",
+        "112 - Aersyad Bin Abdul Ghaffar",
+        "113 - Md Azmi Bin Mokdeh",
+        "114 - Zulkiefly B. Ahmad",
+        "118 - Nurul Aida Binti Sulong",
+        "119 - Mohd Ruby Bin Mohamad Nor",
+        "120 - Siti Farhana Binti Fatwan",
+        "121 - Rosli Bin Ab Rashid",
+        "122 - Izuraida Binti Harum",
+        "123 - Muhamaad Asruf Bin Muhammad",
+        "126 - Nur Aslin Binti Md Asri",
+        "127 - Zawani Bin Ismail",
+        "128 - Fatimah Binti Haji Mohd Zulkafaly",
+        "129 - Suraya Binti Ibrahim",
+        "130 - Mohd Aliff Bin Yasak",
+        "131 - Mohd Amirul Hizwan Bin Abdul Rahim",
+        "132 - Saari Bin Ishak",
+        "133 - Mazlysham Bin Mohamad",
+        "135 - Mohd Sabri Bin Abu Bakar @ Ismail",
+        "136 - Nor Hisham Bin Abd Rahman",
+        "137 - Fatimah Binti Mohd Zin",
+        "138 - Sharifah Binti Sudin",
+        "139 - Azrul Norazmi Bin Abdul Rahman",
+        "140 - Mohd Sukri Bin Musa",
+        "141 - Wan Muhadariah binti Wan Mustaffa",
+        "142 - Che Mazlan bin Hasim",
+        "143 - Norhudha binti Abd Rahman",
+        "144 - Abdullah bin Tahar",
+        "145 - Mohd Farouk bin Hashim",
+        "146 - Mohd Norhafis bin Harun"
+    ];
+
+    let participants;
+    let winners = JSON.parse(localStorage.getItem('ld_winners') || '[]');
+    let isDrawing = false;
+
+    // ===== SOUND ENGINE (Web Audio API) =====
+    let audioCtx = null;
+    let soundEnabled = localStorage.getItem('ld_sound') !== 'false'; // default ON
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        // Resume if suspended (browser autoplay policy)
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    // Single tone with envelope
+    function tone(freq, duration, type = 'sine', volume = 0.2, delay = 0) {
+        if (!soundEnabled || !audioCtx) return;
+        const t = audioCtx.currentTime + delay;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(volume, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + duration);
+    }
+
+    // Tick sound (during shuffle)
+    function playTick() {
+        tone(1200, 0.04, 'square', 0.08);
+    }
+
+    // Drum roll buildup - rapid low notes building intensity
+    function playDrumroll() {
+        if (!soundEnabled || !audioCtx) return;
+        for (let i = 0; i < 8; i++) {
+            tone(80 + i * 5, 0.06, 'sawtooth', 0.1 + i * 0.015, i * 0.05);
+        }
+    }
+
+    // Fanfare - victory chord (C major with octave)
+    function playFanfare() {
+        if (!soundEnabled || !audioCtx) return;
+        // Rising arpeggio
+        tone(523.25, 0.15, 'triangle', 0.2, 0);      // C5
+        tone(659.25, 0.15, 'triangle', 0.2, 0.08);   // E5
+        tone(783.99, 0.15, 'triangle', 0.2, 0.16);   // G5
+        // Final chord (held)
+        tone(523.25, 0.6, 'triangle', 0.18, 0.25);   // C5
+        tone(659.25, 0.6, 'triangle', 0.18, 0.25);   // E5
+        tone(783.99, 0.6, 'triangle', 0.18, 0.25);   // G5
+        tone(1046.50, 0.6, 'triangle', 0.15, 0.25);  // C6
+        // Sparkle on top
+        tone(2093, 0.3, 'sine', 0.1, 0.4);
+        tone(2637, 0.3, 'sine', 0.08, 0.5);
+    }
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        localStorage.setItem('ld_sound', soundEnabled);
+        const icon = document.getElementById('sound-icon');
+        icon.setAttribute('data-lucide', soundEnabled ? 'volume-2' : 'volume-x');
+        lucide.createIcons();
+        if (soundEnabled) {
+            initAudio();
+            tone(800, 0.1, 'sine', 0.15); // confirmation beep
+        }
+    }
+
+    function applySoundIcon() {
+        const icon = document.getElementById('sound-icon');
+        if (icon) {
+            icon.setAttribute('data-lucide', soundEnabled ? 'volume-2' : 'volume-x');
+        }
+    }
+    // ===== END SOUND ENGINE =====
+
+    // Initialize participants - load from localStorage or use default KIKB list
+    const stored = localStorage.getItem('ld_participants');
+    if (stored === null) {
+        // First time - use default list
+        participants = [...defaultParticipants];
+        localStorage.setItem('ld_participants', JSON.stringify(participants));
+    } else {
+        participants = JSON.parse(stored);
+    }
+
+    function updateUI() {
+        document.getElementById('count-display').textContent = participants.length + ' peserta';
+        document.getElementById('empty-msg').classList.toggle('hidden', participants.length > 0);
+        document.getElementById('btn-start').disabled = participants.length === 0;
+        document.getElementById('btn-start').classList.toggle('opacity-40', participants.length === 0);
+        renderWinners();
+    }
+
+    function renderWinners() {
+        const section = document.getElementById('winners-section');
+        const list = document.getElementById('winners-list');
+        if (winners.length === 0) { section.classList.add('hidden'); return; }
+        section.classList.remove('hidden');
+        list.innerHTML = winners.map((w, i) => `<span class="bg-amber-500/20 text-amber-200 border border-amber-400/30 px-3 py-1 rounded-full text-sm font-semibold">#${i+1} ${w}</span>`).join('');
+    }
+
+    function openModal() {
+        document.getElementById('names-input').value = participants.join('\n');
+        document.getElementById('modal').style.display = 'flex';
+        lucide.createIcons();
+    }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    function saveNames() {
+        const raw = document.getElementById('names-input').value;
+        participants = raw.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+        localStorage.setItem('ld_participants', JSON.stringify(participants));
+        updateUI();
+        closeModal();
+    }
+
+    function loadDefaultList() {
+        if (confirm('Muat senarai 88 ahli KIKB? Senarai semasa akan diganti.')) {
+            document.getElementById('names-input').value = defaultParticipants.join('\n');
+        }
+    }
+
+    // Reset Undian: kekalkan senarai asal, padam pemenang sahaja
+    function resetUndian() {
+        if (!confirm('Reset undian? Semua pemenang akan dipadam dan senarai peserta akan dikembalikan.')) return;
+        // Restore: combine current participants with winners back into the pool
+        participants = [...participants, ...winners];
+        winners = [];
+        localStorage.setItem('ld_participants', JSON.stringify(participants));
+        localStorage.setItem('ld_winners', JSON.stringify(winners));
+        document.getElementById('name-display').textContent = '—';
+        document.getElementById('name-display').className = 'text-3xl md:text-5xl font-black text-white truncate';
+        document.getElementById('btn-next').classList.add('hidden');
+        document.getElementById('btn-start').classList.remove('hidden');
+        updateUI();
+        closeModal();
+    }
+
+    // Reset Semua: padam semua data
+    function clearAll() {
+        if (!confirm('Padam SEMUA peserta dan pemenang? Tindakan ini tidak boleh diundur.')) return;
+        participants = [];
+        winners = [];
+        localStorage.setItem('ld_participants', JSON.stringify(participants));
+        localStorage.removeItem('ld_winners');
+        document.getElementById('name-display').textContent = '—';
+        document.getElementById('name-display').className = 'text-3xl md:text-5xl font-black text-white truncate';
+        document.getElementById('btn-next').classList.add('hidden');
+        document.getElementById('btn-start').classList.remove('hidden');
+        updateUI();
+        closeModal();
+    }
+
+    function startDraw() {
+        if (isDrawing || participants.length === 0) return;
+        initAudio(); // ensure audio context active (user gesture)
+        isDrawing = true;
+        const display = document.getElementById('name-display');
+        display.className = 'text-3xl md:text-5xl font-black text-white truncate shuffling';
+        document.getElementById('btn-start').classList.add('hidden');
+
+        let elapsed = 0;
+        let drumrollTriggered = false;
+        const interval = setInterval(() => {
+            display.textContent = participants[Math.floor(Math.random() * participants.length)];
+            // Tick on every shuffle frame (50ms = ~20 ticks/sec)
+            playTick();
+            elapsed += 50;
+            // Trigger drumroll buildup at 2000ms (500ms before reveal)
+            if (elapsed >= 2000 && !drumrollTriggered) {
+                drumrollTriggered = true;
+                playDrumroll();
+            }
+            if (elapsed >= 2500) {
+                clearInterval(interval);
+                pickWinner(display);
+            }
+        }, 50);
+    }
+
+    function pickWinner(display) {
+        const idx = Math.floor(Math.random() * participants.length);
+        const winner = participants.splice(idx, 1)[0];
+        winners.push(winner);
+        localStorage.setItem('ld_participants', JSON.stringify(participants));
+        localStorage.setItem('ld_winners', JSON.stringify(winners));
+
+        // Rolldown effect before reveal
+        display.className = 'text-3xl md:text-5xl font-black text-amber-400 truncate rolldown-effect';
+        display.textContent = winner;
+
+        setTimeout(() => {
+            display.className = 'text-3xl md:text-5xl font-black gold-text truncate winner-reveal';
+            
+            // Fanfare sound!
+            playFanfare();
+            
+            // Confetti burst - blue/white/gold theme
+            try {
+                confetti({ 
+                    particleCount: 200, 
+                    spread: 100, 
+                    origin: { x: 0.5, y: 0.5 },
+                    colors: ['#fbbf24','#f59e0b','#fde68a','#ffffff','#3b82f6','#1e40af']
+                });
+                setTimeout(() => {
+                    confetti({ 
+                        particleCount: 150, 
+                        spread: 120, 
+                        origin: { x: 0.5, y: 0.5 },
+                        colors: ['#fbbf24','#fde68a','#ffd700','#ffffff']
+                    });
+                }, 300);
+                setTimeout(() => {
+                    confetti({ 
+                        particleCount: 100, 
+                        spread: 90, 
+                        origin: { x: 0.5, y: 0.5 },
+                        colors: ['#f59e0b','#fbbf24','#60a5fa','#ffffff']
+                    });
+                }, 600);
+            } catch(e) {
+                console.log('Confetti library issue:', e);
+            }
+        }, 80);
+
+        document.getElementById('btn-next').classList.remove('hidden');
+        isDrawing = false;
+        updateUI();
+    }
+
+    function nextDraw() {
+        const display = document.getElementById('name-display');
+        display.textContent = '—';
+        display.className = 'text-3xl md:text-5xl font-black text-white truncate';
+        document.getElementById('btn-next').classList.add('hidden');
+        document.getElementById('btn-start').classList.remove('hidden');
+        if (participants.length === 0) {
+            display.textContent = '🎉 Tamat!';
+        } else {
+            setTimeout(() => startDraw(), 500);
+        }
+    }
+
+    // Element SDK (only if available)
+    if (window.elementSdk) {
+        window.elementSdk.init({
+            defaultConfig,
+            onConfigChange: async (config) => {
+                const font = config.font_family || defaultConfig.font_family;
+                const size = config.font_size || defaultConfig.font_size;
+                document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
+                document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+                document.getElementById('main-title').style.fontFamily = `${font}, sans-serif`;
+                document.getElementById('subtitle').style.fontFamily = `${font}, sans-serif`;
+                document.getElementById('main-title').style.fontSize = `${size * 3.5}px`;
+                document.getElementById('subtitle').style.fontSize = `${size * 1.4}px`;
+                document.body.style.background = `linear-gradient(135deg, ${config.background_color || '#0a2463'} 0%, #1e3a8a 40%, ${config.accent_color || '#1e40af'} 100%)`;
+            },
+            mapToCapabilities: (config) => ({
+                recolorables: [
+                    { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+                    { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+                    { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } }
+                ],
+                borderables: [],
+                fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+                fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+            }),
+            mapToEditPanelValues: (config) => new Map([
+                ['main_title', config.main_title || defaultConfig.main_title],
+                ['subtitle', config.subtitle || defaultConfig.subtitle]
+            ])
+        });
+    }
+
+    updateUI();
+    lucide.createIcons();
+    applySoundIcon();
+    lucide.createIcons();
+</script>
+ </body>
+</html>
