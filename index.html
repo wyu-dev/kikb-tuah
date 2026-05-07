@@ -3,152 +3,596 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lucky Draw KIKB</title>
+  <title>Cabutan Bertuah — KIKB MAT</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-        * { font-family: 'Outfit', sans-serif; }
-        html, body { height: 100%; margin: 0; }
-        body {
-            background-image: 
-  linear-gradient(135deg, rgba(10, 36, 99, 0.65) 0%, rgba(30, 58, 138, 0.65) 40%, rgba(30, 64, 175, 0.65) 100%),
-  url('https://drive.google.com/file/d/1x3dXR7MKBdMPWLQPLH2YPG5bpH2MMoFb/view?usp=sharing');
-background-size: cover;
-background-attachment: fixed;
-background-position: center;
-        }
-        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,215,0,0.2); }
-        .glass-gold { background: rgba(255,215,0,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,215,0,0.3); }
-        @keyframes shuffle { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.6; transform:scale(0.95); } }
-        @keyframes winner-pop { 0%{ transform:scale(0.3); opacity:0; } 60%{ transform:scale(1.15); } 100%{ transform:scale(1); opacity:1; } }
-        @keyframes rolldown { 0%{ transform: translateY(-100%); opacity: 0; } 50%{ opacity: 1; } 100%{ transform: translateY(0); opacity: 1; } }
-        .shuffling { animation: shuffle 0.1s infinite; }
-        .winner-reveal { animation: winner-pop 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-        .rolldown-effect { animation: rolldown 0.08s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-        @keyframes pulse-glow {
-            0%,100%{ box-shadow: 0 0 30px rgba(255, 255, 255, 0.35), 0 0 60px rgba(255, 255, 255, 0.2); }
-            50%{ box-shadow: 0 0 60px rgba(255, 255, 255, 0.65), 0 0 100px rgba(255, 255, 255, 0.35); }
-        }
-        .glow-pulse { animation: pulse-glow 2s infinite; }
+    :root {
+      --primary: #0a2463;
+      --secondary: #1e3a8a;
+      --accent: #fbbf24;
+      --light: #ffffff;
+      --dark: #0f172a;
+      --serif: 'Bodoni Moda', serif;
+      --sans: 'Inter', sans-serif;
+    }
+    
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background-image: url('https://images.pexels.com/photos/22032439/pexels-photo-22032439.jpeg');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      color: var(--light);
+      overflow-x: hidden;
+    }
 
-        /* Logo outer glow effect - white */
-        @keyframes logo-glow {
-            0%, 100% {
-                filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))
-                        drop-shadow(0 0 16px rgba(255, 255, 255, 0.6))
-                        drop-shadow(0 0 28px rgba(255, 255, 255, 0.4));
-            }
-            50% {
-                filter: drop-shadow(0 0 14px rgba(255, 255, 255, 1))
-                        drop-shadow(0 0 28px rgba(255, 255, 255, 0.8))
-                        drop-shadow(0 0 48px rgba(255, 255, 255, 0.55));
-            }
-        }
-        .logo-glow {
-            animation: logo-glow 2.5s ease-in-out infinite;
-        }
+    /* Decorative line dividers */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(251, 191, 36, 0.3), transparent);
+      margin: 2rem 0;
+    }
 
-        /* Gold gradient text for title */
-        .gold-text {
-            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #f59e0b 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
-        }
-    </style>
-  <style>body { box-sizing: border-box; }</style>
+    /* Serif headline with subtle glow */
+    .headline {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 8vw, 4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--light);
+      text-align: center;
+      margin: 0;
+      background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: headline-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+    }
+
+    @keyframes headline-in {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Subtitle */
+    .subtitle {
+      font-size: clamp(0.875rem, 3vw, 1.125rem);
+      font-weight: 300;
+      letter-spacing: 0.05em;
+      color: rgba(255, 255, 255, 0.7);
+      text-align: center;
+      margin-top: 0.5rem;
+      animation: subtitle-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: 0.15s;
+      opacity: 0;
+    }
+
+    @keyframes subtitle-in {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Logo with sophisticated glow */
+    .logo-container {
+      margin-bottom: 2rem;
+      animation: logo-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: 0.05s;
+      opacity: 0;
+    }
+
+    @keyframes logo-in {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .logo-img {
+      height: clamp(80px, 12vw, 140px);
+      width: auto;
+      display: block;
+      margin: 0 auto;
+      animation: logo-glow 3s ease-in-out infinite;
+      filter-brightness: 1.05;
+    }
+
+    @keyframes logo-glow {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))
+                drop-shadow(0 0 16px rgba(255, 255, 255, 0.5))
+                drop-shadow(0 0 28px rgba(255, 255, 255, 0.3))
+                brightness(1.05);
+      }
+      50% {
+        filter: drop-shadow(0 0 16px rgba(255, 255, 255, 1))
+                drop-shadow(0 0 32px rgba(255, 255, 255, 0.7))
+                drop-shadow(0 0 48px rgba(255, 255, 255, 0.4))
+                brightness(1.08);
+      }
+    }
+
+    /* Glass morphism panels */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 2rem;
+    }
+
+    /* Display name card with white glow */
+    .display-card {
+      background: rgba(30, 58, 138, 0.4);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(251, 191, 36, 0.25);
+      border-radius: 24px;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin: 2rem 0;
+      animation: card-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: 0.4s;
+      opacity: 0;
+    }
+
+    @keyframes card-in {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .display-name {
+      font-size: clamp(1.25rem, 4vw, 2.5rem);
+      font-family: var(--serif);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--light);
+      margin: 0;
+      min-height: 1.2em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      animation: pulse-white 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-white {
+      0%, 100% {
+        text-shadow: 0 0 30px rgba(255, 255, 255, 0.4),
+                     0 0 60px rgba(255, 255, 255, 0.2);
+      }
+      50% {
+        text-shadow: 0 0 60px rgba(255, 255, 255, 0.7),
+                     0 0 100px rgba(255, 255, 255, 0.35);
+      }
+    }
+
+    /* Action buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #f59e0b 100%);
+      color: var(--dark);
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.875rem 2rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 8px 24px rgba(251, 191, 36, 0.25);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(251, 191, 36, 0.35);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--light);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.875rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Control area */
+    .control-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin: 2rem 0;
+      animation: controls-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: 0.5s;
+      opacity: 0;
+    }
+
+    @keyframes controls-in {
+      0% { opacity: 0; transform: translateY(15px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Winner pills */
+    .winner-pill {
+      background: rgba(251, 191, 36, 0.25);
+      border: 2px solid rgba(251, 191, 36, 0.6);
+      color: #ffffff;
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: var(--serif);
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      animation: pill-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+    }
+
+    @keyframes pill-in {
+      0% { opacity: 0; transform: scale(0.8) translateY(-10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Header controls */
+    .header-control {
+      position: absolute;
+      top: 1.5rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .header-control:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--light);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      animation: modal-in 0.3s ease;
+    }
+
+    @keyframes modal-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, rgba(10, 36, 99, 0.95) 0%, rgba(30, 58, 138, 0.95) 100%);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modal-content-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modal-content-in {
+      0% { transform: scale(0.95); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--light);
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-close {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.6);
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: var(--light);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      color: rgba(251, 191, 36, 0.9);
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      color: var(--light);
+      padding: 0.875rem;
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-size: 0.9375rem;
+      resize: none;
+    overflow-y: scroll;
+    overflow-x: hidden;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: rgba(251, 191, 36, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn-modal-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #f59e0b 100%);
+      color: var(--dark);
+      font-weight: 600;
+      padding: 0.875rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-modal-secondary {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      color: rgba(251, 191, 36, 0.9);
+      font-weight: 500;
+      padding: 0.875rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-secondary:hover {
+      background: rgba(251, 191, 36, 0.15);
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-block;
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 0.375rem 0.875rem;
+      border-radius: 20px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      animation: badge-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: 0.6s;
+      opacity: 0;
+    }
+
+    @keyframes badge-in {
+      0% { opacity: 0; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Winners section */
+    .winners-container {
+      margin-top: 2rem;
+      max-height: 40vh;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+      animation: winners-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation-delay: 0.7s;
+      opacity: 0;
+    }
+
+    @keyframes winners-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    .winners-title {
+      font-family: var(--serif);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .winners-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Animations for winner reveal */
+    @keyframes winner-shuffle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.98); }
+    }
+
+    .shuffling .display-name {
+      animation: winner-shuffle 0.1s infinite !important;
+    }
+
+    @keyframes winner-pop {
+      0% { transform: scale(0.3); opacity: 0; }
+      60% { transform: scale(1.12); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .winner-pop .display-name {
+      animation: winner-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .glass-panel {
+        padding: 1.5rem;
+      }
+      
+      .display-card {
+        padding: 2rem 1.5rem;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+      }
+
+      .control-area {
+        gap: 0.75rem;
+      }
+    }
+  </style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
- <body class="h-full overflow-auto">
-  <div id="app" class="h-full w-full flex flex-col items-center justify-center p-6 relative">
-   <!-- Header bar: Settings (left) | Sound + Count (right) -->
-   <button onclick="openModal()" class="absolute top-6 left-6 glass rounded-full p-3 text-white/70 hover:text-white transition z-10">
-    <i data-lucide="settings" style="width:24px;height:24px;"></i>
-   </button>
-   <div class="absolute top-6 right-6 flex items-center gap-3 z-10">
-    <button id="btn-sound" onclick="toggleSound()" class="glass rounded-full p-3 text-white/70 hover:text-white transition" title="Toggle bunyi">
-     <i id="sound-icon" data-lucide="volume-2" style="width:24px;height:24px;"></i>
+ <body class="flex items-center justify-center min-h-screen p-4">
+  <!-- FIXED HEADER -->
+  <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.5rem; text-align: center;">
+    <button id="btn-settings" onclick="openModal()" class="header-control" style="left: 1.5rem; position: absolute;" title="Tetapan">
+      <i data-lucide="settings" style="width:20px;height:20px;"></i>
     </button>
-    <div id="participant-badge" class="glass rounded-full px-5 py-2 text-white/90 text-lg font-semibold flex items-center gap-2">
-     <i data-lucide="users" style="width:20px;height:20px;"></i> <span id="count-display">0 peserta</span>
-    </div>
-   </div>
-   <!-- Logo with outer glow -->
-   <div class="mb-4 mt-4">
-    <img src="https://wyu-dev.github.io/logo/kikb.png" alt="KIKB Logo" class="h-24 md:h-32 object-contain mx-auto logo-glow" loading="lazy" onerror="this.style.display='none';">
-   </div>
-   <!-- Main content -->
-   <div class="text-center mb-8">
-    <h1 id="main-title" class="text-5xl md:text-7xl font-black gold-text tracking-tight mb-2">CABUTAN BERTUAH</h1>
-    <p id="subtitle" class="text-xl md:text-2xl text-white/80 font-semibold">Mesyuarat Agung Tahunan Kali Ke-4</p>
-   </div>
-   <!-- Display card -->
-   <div id="display-card" class="glass-gold rounded-3xl p-10 md:p-16 w-full max-w-3xl text-center mb-8 glow-pulse">
-    <p id="name-display" class="text-3xl md:text-5xl font-black text-white truncate">—</p>
-   </div>
-   <!-- Buttons (moved ABOVE winners history) -->
-   <div id="buttons" class="flex gap-4 flex-wrap justify-center mb-6">
-    <button id="btn-start" onclick="startDraw()" class="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-blue-950 font-bold text-xl px-10 py-4 rounded-2xl transition transform hover:scale-105 shadow-lg shadow-amber-500/40">
-     🎲 MULA
+    <button id="btn-sound" onclick="toggleSound()" class="header-control" style="right: 1.5rem; position: absolute;" title="Toggle bunyi">
+      <i id="sound-icon" data-lucide="volume-2" style="width:20px;height:20px;"></i>
     </button>
-    <button id="btn-next" onclick="nextDraw()" class="hidden bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-xl px-10 py-4 rounded-2xl transition transform hover:scale-105 shadow-lg shadow-blue-500/40 border border-amber-400/30">
-     ⏭️ Cabutan Seterusnya
-    </button>
-   </div>
-   <!-- Winners history (moved BELOW buttons) -->
-   <div id="winners-section" class="hidden w-full max-w-3xl mb-6">
-    <div class="glass rounded-2xl p-4">
-     <h3 class="text-amber-300 font-semibold text-sm uppercase tracking-widest mb-2 flex items-center gap-2">
-      <i data-lucide="trophy" style="width:16px;height:16px;"></i> Pemenang
-     </h3>
-     <div id="winners-list" class="flex flex-wrap gap-2"></div>
-    </div>
-   </div>
-   <!-- Empty state -->
-   <p id="empty-msg" class="text-white/40 mt-2 text-lg hidden">Tiada peserta. Sila tambah nama di tetapan.</p>
-  </div>
-  <!-- Modal -->
-  <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4" style="display:none;">
-   <div class="bg-blue-950 border border-amber-400/30 rounded-3xl p-8 w-full max-w-lg shadow-2xl shadow-amber-500/20 max-h-[90vh] overflow-y-auto">
-    <div class="flex justify-between items-center mb-6">
-     <h2 class="text-2xl font-bold text-amber-300">Tetapan Peserta</h2>
-     <button onclick="closeModal()" class="text-white/60 hover:text-white text-2xl">×</button>
-    </div>
-    <label class="text-amber-300 text-sm font-semibold block mb-2" for="names-input">Senarai Nama (satu nama setiap baris)</label>
-    <textarea id="names-input" class="w-full h-56 bg-blue-900/50 border border-blue-700 rounded-xl p-4 text-white text-base resize-none focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Ahmad&#10;Siti&#10;Ali&#10;Fatimah"></textarea>
-    <div class="flex gap-3 mt-4">
-     <button onclick="saveNames()" class="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-blue-950 font-bold py-3 rounded-xl transition">Simpan</button>
-     <button onclick="loadDefaultList()" class="bg-blue-800 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition text-sm border border-amber-400/20">Senarai KIKB</button>
-    </div>
-    <!-- Reset section -->
-    <div class="mt-6 pt-6 border-t border-amber-400/20">
-     <h3 class="text-amber-300 text-sm font-semibold uppercase tracking-wider mb-3">Tetapan Cabutan</h3>
-     <div class="flex flex-col gap-3">
-      <button onclick="resetUndian()" class="bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border border-amber-400/30 font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
-       <i data-lucide="rotate-ccw" style="width:18px;height:18px;"></i> Reset Undian (kekalkan senarai)
-      </button>
-      <button onclick="clearAll()" class="bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-400/30 font-bold py-3 px-4 rounded-xl transition flex items-center justify-center gap-2">
-       <i data-lucide="trash-2" style="width:18px;height:18px;"></i> Reset Semua (padam senarai)
-      </button>
-     </div>
-    </div>
-   </div>
-  </div>
-  <script>
-    const defaultConfig = {
-        main_title: 'CABUTAN BERTUAH',
-        subtitle: 'Mesyuarat Agung Tahunan Kali Ke-4',
-        background_color: '#0a2463',
-        accent_color: '#fbbf24',
-        text_color: '#ffffff',
-        font_family: 'Outfit',
-        font_size: 16
-    };
+    <span id="participant-badge" class="badge" style="position: absolute; right: 5.5rem; top: 1.5rem;">93 peserta</span>
 
+    <!-- Logo and Title -->
+    <div class="logo-container" style="margin-bottom: 1rem;">
+      <img src="https://wyu-dev.github.io/logo/kikb.png" alt="KIKB" class="logo-img" loading="lazy">
+    </div>
+    
+    <h1 class="headline">CABUTAN BERTUAH</h1>
+    <p class="subtitle">Mesyuarat Agung Tahunan Kali Ke-4</p>
+  </div>
+
+  <!-- MAIN CONTENT (below fixed header) -->
+  <div class="w-full max-w-2xl" style="margin-top: 420px;">
+    <!-- Display card -->
+    <div class="display-card">
+      <p class="display-name" id="name-display">—</p>
+    </div>
+
+    <!-- Control area -->
+    <div class="control-area">
+      <button id="btn-start" onclick="startDraw()" class="btn-primary">
+        <i data-lucide="dices" style="width:18px;height:18px;"></i>
+        MULA
+      </button>
+      <button id="btn-next" onclick="nextDraw()" class="btn-primary hidden">
+        <i data-lucide="arrow-right" style="width:18px;height:18px;"></i>
+        Cabutan Seterusnya
+      </button>
+    </div>
+
+    <!-- Winners section -->
+    <div id="winners-section" class="winners-container hidden">
+      <div class="winners-title">
+        <i data-lucide="trophy" style="width:20px;height:20px;display:inline;margin-right:0.5rem;vertical-align:-2px;"></i>
+        Pemenang
+      </div>
+      <div id="winners-list" class="winners-list"></div>
+    </div>
+
+    <p id="empty-msg" class="text-center text-white/40 text-sm mt-6 hidden">Tiada peserta. Sila buka tetapan untuk tambah nama.</p>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        Tetapan Peserta
+        <span class="modal-close" onclick="closeModal()">×</span>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Senarai Nama (satu setiap baris)</label>
+        <textarea id="names-input" class="form-input" style="height: 280px;" placeholder="Ahmad&#10;Siti&#10;Ali&#10;Fatimah"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button onclick="saveNames()" class="btn-modal-primary">Simpan Perubahan</button>
+        <button onclick="loadDefaultList()" class="btn-modal-secondary">Muatkan Senarai KIKB (93)</button>
+      </div>
+
+      <div class="divider" style="margin: 1.5rem 0;"></div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label" style="margin-bottom: 1rem;">Tetapan Cabutan</label>
+        <div class="modal-actions">
+          <button onclick="resetUndian()" class="btn-modal-secondary">Reset Undian</button>
+          <button onclick="clearAll()" class="btn-modal-secondary">Padam Semua</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
     // Default KIKB member list (93 members)
     const defaultParticipants = [
         "002 - Tasirihafizan Bin Ab Rahman",
@@ -246,23 +690,22 @@ background-position: center;
         "147 - Norehan binti Abd Mutalib"
     ];
 
-    let participants;
+    let audioCtx = null;
+    let soundEnabled = localStorage.getItem('ld_sound') !== 'false';
+    
+    const stored = localStorage.getItem('ld_participants');
+    let participants = stored === null ? [...defaultParticipants] : JSON.parse(stored);
     let winners = JSON.parse(localStorage.getItem('ld_winners') || '[]');
     let isDrawing = false;
 
-    // ===== SOUND ENGINE (Web Audio API) =====
-    let audioCtx = null;
-    let soundEnabled = localStorage.getItem('ld_sound') !== 'false'; // default ON
-
+    // Sound engine
     function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        // Resume if suspended (browser autoplay policy)
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    // Single tone with envelope
     function tone(freq, duration, type = 'sine', volume = 0.2, delay = 0) {
         if (!soundEnabled || !audioCtx) return;
         const t = audioCtx.currentTime + delay;
@@ -278,12 +721,8 @@ background-position: center;
         osc.stop(t + duration);
     }
 
-    // Tick sound (during shuffle)
-    function playTick() {
-        tone(1200, 0.04, 'square', 0.08);
-    }
+    function playTick() { tone(1200, 0.04, 'square', 0.08); }
 
-    // Drum roll buildup - rapid low notes building intensity
     function playDrumroll() {
         if (!soundEnabled || !audioCtx) return;
         for (let i = 0; i < 8; i++) {
@@ -291,19 +730,15 @@ background-position: center;
         }
     }
 
-    // Fanfare - victory chord (C major with octave)
     function playFanfare() {
         if (!soundEnabled || !audioCtx) return;
-        // Rising arpeggio
-        tone(523.25, 0.15, 'triangle', 0.2, 0);      // C5
-        tone(659.25, 0.15, 'triangle', 0.2, 0.08);   // E5
-        tone(783.99, 0.15, 'triangle', 0.2, 0.16);   // G5
-        // Final chord (held)
-        tone(523.25, 0.6, 'triangle', 0.18, 0.25);   // C5
-        tone(659.25, 0.6, 'triangle', 0.18, 0.25);   // E5
-        tone(783.99, 0.6, 'triangle', 0.18, 0.25);   // G5
-        tone(1046.50, 0.6, 'triangle', 0.15, 0.25);  // C6
-        // Sparkle on top
+        tone(523.25, 0.15, 'triangle', 0.2, 0);
+        tone(659.25, 0.15, 'triangle', 0.2, 0.08);
+        tone(783.99, 0.15, 'triangle', 0.2, 0.16);
+        tone(523.25, 0.6, 'triangle', 0.18, 0.25);
+        tone(659.25, 0.6, 'triangle', 0.18, 0.25);
+        tone(783.99, 0.6, 'triangle', 0.18, 0.25);
+        tone(1046.50, 0.6, 'triangle', 0.15, 0.25);
         tone(2093, 0.3, 'sine', 0.1, 0.4);
         tone(2637, 0.3, 'sine', 0.08, 0.5);
     }
@@ -311,55 +746,45 @@ background-position: center;
     function toggleSound() {
         soundEnabled = !soundEnabled;
         localStorage.setItem('ld_sound', soundEnabled);
-        const icon = document.getElementById('sound-icon');
-        icon.setAttribute('data-lucide', soundEnabled ? 'volume-2' : 'volume-x');
+        document.getElementById('sound-icon').setAttribute('data-lucide', soundEnabled ? 'volume-2' : 'volume-x');
         lucide.createIcons();
         if (soundEnabled) {
             initAudio();
-            tone(800, 0.1, 'sine', 0.15); // confirmation beep
+            tone(800, 0.1, 'sine', 0.15);
         }
-    }
-
-    function applySoundIcon() {
-        const icon = document.getElementById('sound-icon');
-        if (icon) {
-            icon.setAttribute('data-lucide', soundEnabled ? 'volume-2' : 'volume-x');
-        }
-    }
-    // ===== END SOUND ENGINE =====
-
-    // Initialize participants - load from localStorage or use default KIKB list
-    const stored = localStorage.getItem('ld_participants');
-    if (stored === null) {
-        // First time - use default list
-        participants = [...defaultParticipants];
-        localStorage.setItem('ld_participants', JSON.stringify(participants));
-    } else {
-        participants = JSON.parse(stored);
     }
 
     function updateUI() {
-        document.getElementById('count-display').textContent = participants.length + ' peserta';
-        document.getElementById('empty-msg').classList.toggle('hidden', participants.length > 0);
-        document.getElementById('btn-start').disabled = participants.length === 0;
-        document.getElementById('btn-start').classList.toggle('opacity-40', participants.length === 0);
+        const count = participants.length;
+        document.getElementById('participant-badge').textContent = count + ' peserta';
+        document.getElementById('empty-msg').classList.toggle('hidden', count > 0);
+        document.getElementById('btn-start').disabled = count === 0;
+        document.getElementById('btn-start').classList.toggle('opacity-50', count === 0);
         renderWinners();
     }
 
     function renderWinners() {
         const section = document.getElementById('winners-section');
         const list = document.getElementById('winners-list');
-        if (winners.length === 0) { section.classList.add('hidden'); return; }
+        if (winners.length === 0) {
+            section.classList.add('hidden');
+            return;
+        }
         section.classList.remove('hidden');
-        list.innerHTML = winners.map((w, i) => `<span class="bg-amber-500/20 text-amber-200 border border-amber-400/30 px-3 py-1 rounded-full text-sm font-semibold">#${i+1} ${w}</span>`).join('');
+        list.innerHTML = winners.map((w, i) => {
+            const number = winners.length - i; // Reverse numbering
+            return `<div class="winner-pill"><span style="font-weight: 900; color: #fbbf24;">#${number}</span> ${w}</div>`;
+        }).join('');
     }
 
     function openModal() {
         document.getElementById('names-input').value = participants.join('\n');
-        document.getElementById('modal').style.display = 'flex';
-        lucide.createIcons();
+        document.getElementById('modal').classList.add('active');
     }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+    }
 
     function saveNames() {
         const raw = document.getElementById('names-input').value;
@@ -370,36 +795,32 @@ background-position: center;
     }
 
     function loadDefaultList() {
-        if (confirm('Muat senarai 88 ahli KIKB? Senarai semasa akan diganti.')) {
+        if (confirm('Muatkan senarai 93 ahli KIKB?')) {
             document.getElementById('names-input').value = defaultParticipants.join('\n');
         }
     }
 
-    // Reset Undian: kekalkan senarai asal, padam pemenang sahaja
     function resetUndian() {
-        if (!confirm('Reset undian? Semua pemenang akan dipadam dan senarai peserta akan dikembalikan.')) return;
-        // Restore: combine current participants with winners back into the pool
+        if (!confirm('Reset undian? Semua pemenang akan dipadam.')) return;
         participants = [...participants, ...winners];
         winners = [];
         localStorage.setItem('ld_participants', JSON.stringify(participants));
         localStorage.setItem('ld_winners', JSON.stringify(winners));
         document.getElementById('name-display').textContent = '—';
-        document.getElementById('name-display').className = 'text-3xl md:text-5xl font-black text-white truncate';
+        document.getElementById('name-display').parentElement.classList.remove('winner-pop', 'shuffling');
         document.getElementById('btn-next').classList.add('hidden');
         document.getElementById('btn-start').classList.remove('hidden');
         updateUI();
         closeModal();
     }
 
-    // Reset Semua: padam semua data
     function clearAll() {
-        if (!confirm('Padam SEMUA peserta dan pemenang? Tindakan ini tidak boleh diundur.')) return;
+        if (!confirm('Padam SEMUA peserta dan pemenang?')) return;
         participants = [];
         winners = [];
         localStorage.setItem('ld_participants', JSON.stringify(participants));
         localStorage.removeItem('ld_winners');
         document.getElementById('name-display').textContent = '—';
-        document.getElementById('name-display').className = 'text-3xl md:text-5xl font-black text-white truncate';
         document.getElementById('btn-next').classList.add('hidden');
         document.getElementById('btn-start').classList.remove('hidden');
         updateUI();
@@ -408,20 +829,18 @@ background-position: center;
 
     function startDraw() {
         if (isDrawing || participants.length === 0) return;
-        initAudio(); // ensure audio context active (user gesture)
+        initAudio();
         isDrawing = true;
-        const display = document.getElementById('name-display');
-        display.className = 'text-3xl md:text-5xl font-black text-white truncate shuffling';
+        const display = document.getElementById('name-display').parentElement;
+        display.classList.add('shuffling');
         document.getElementById('btn-start').classList.add('hidden');
 
         let elapsed = 0;
         let drumrollTriggered = false;
         const interval = setInterval(() => {
-            display.textContent = participants[Math.floor(Math.random() * participants.length)];
-            // Tick on every shuffle frame (50ms = ~20 ticks/sec)
+            document.getElementById('name-display').textContent = participants[Math.floor(Math.random() * participants.length)];
             playTick();
             elapsed += 50;
-            // Trigger drumroll buildup at 2000ms (500ms before reveal)
             if (elapsed >= 2000 && !drumrollTriggered) {
                 drumrollTriggered = true;
                 playDrumroll();
@@ -436,48 +855,45 @@ background-position: center;
     function pickWinner(display) {
         const idx = Math.floor(Math.random() * participants.length);
         const winner = participants.splice(idx, 1)[0];
-        winners.push(winner);
+        winners.unshift(winner); // unshift = tambah di depan (newest first)
         localStorage.setItem('ld_participants', JSON.stringify(participants));
         localStorage.setItem('ld_winners', JSON.stringify(winners));
 
-        // Rolldown effect before reveal
-        display.className = 'text-3xl md:text-5xl font-black text-amber-400 truncate rolldown-effect';
-        display.textContent = winner;
+        // Set display to actual winner name
+        display.classList.remove('shuffling');
+        display.classList.add('winner-pop');
+        document.getElementById('name-display').textContent = winner;
+        
+        playFanfare();
 
         setTimeout(() => {
-            display.className = 'text-3xl md:text-5xl font-black gold-text truncate winner-reveal';
-            
-            // Fanfare sound!
-            playFanfare();
-            
-            // Confetti burst - blue/white/gold theme
             try {
-                confetti({ 
-                    particleCount: 200, 
-                    spread: 100, 
+                confetti({
+                    particleCount: 200,
+                    spread: 100,
                     origin: { x: 0.5, y: 0.5 },
-                    colors: ['#fbbf24','#f59e0b','#fde68a','#ffffff','#3b82f6','#1e40af']
+                    colors: ['#fbbf24', '#f59e0b', '#fde68a', '#ffffff', '#3b82f6', '#1e40af']
                 });
                 setTimeout(() => {
-                    confetti({ 
-                        particleCount: 150, 
-                        spread: 120, 
+                    confetti({
+                        particleCount: 150,
+                        spread: 120,
                         origin: { x: 0.5, y: 0.5 },
-                        colors: ['#fbbf24','#fde68a','#ffd700','#ffffff']
+                        colors: ['#fbbf24', '#fde68a', '#ffd700', '#ffffff']
                     });
                 }, 300);
                 setTimeout(() => {
-                    confetti({ 
-                        particleCount: 100, 
-                        spread: 90, 
+                    confetti({
+                        particleCount: 100,
+                        spread: 90,
                         origin: { x: 0.5, y: 0.5 },
-                        colors: ['#f59e0b','#fbbf24','#60a5fa','#ffffff']
+                        colors: ['#f59e0b', '#fbbf24', '#60a5fa', '#ffffff']
                     });
                 }, 600);
-            } catch(e) {
-                console.log('Confetti library issue:', e);
+            } catch (e) {
+                console.log('Confetti error:', e);
             }
-        }, 80);
+        }, 200);
 
         document.getElementById('btn-next').classList.remove('hidden');
         isDrawing = false;
@@ -485,54 +901,27 @@ background-position: center;
     }
 
     function nextDraw() {
-        const display = document.getElementById('name-display');
-        display.textContent = '—';
-        display.className = 'text-3xl md:text-5xl font-black text-white truncate';
+        const display = document.getElementById('name-display').parentElement;
+        display.classList.remove('winner-pop', 'shuffling');
+        document.getElementById('name-display').textContent = '—';
         document.getElementById('btn-next').classList.add('hidden');
         document.getElementById('btn-start').classList.remove('hidden');
         if (participants.length === 0) {
-            display.textContent = '🎉 Tamat!';
+            document.getElementById('name-display').textContent = '🎉 Tamat!';
         } else {
             setTimeout(() => startDraw(), 500);
         }
     }
 
-    // Element SDK (only if available)
-    if (window.elementSdk) {
-        window.elementSdk.init({
-            defaultConfig,
-            onConfigChange: async (config) => {
-                const font = config.font_family || defaultConfig.font_family;
-                const size = config.font_size || defaultConfig.font_size;
-                document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
-                document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
-                document.getElementById('main-title').style.fontFamily = `${font}, sans-serif`;
-                document.getElementById('subtitle').style.fontFamily = `${font}, sans-serif`;
-                document.getElementById('main-title').style.fontSize = `${size * 3.5}px`;
-                document.getElementById('subtitle').style.fontSize = `${size * 1.4}px`;
-                document.body.style.background = `linear-gradient(135deg, ${config.background_color || '#0a2463'} 0%, #1e3a8a 40%, ${config.accent_color || '#1e40af'} 100%)`;
-            },
-            mapToCapabilities: (config) => ({
-                recolorables: [
-                    { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
-                    { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
-                    { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } }
-                ],
-                borderables: [],
-                fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
-                fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
-            }),
-            mapToEditPanelValues: (config) => new Map([
-                ['main_title', config.main_title || defaultConfig.main_title],
-                ['subtitle', config.subtitle || defaultConfig.subtitle]
-            ])
-        });
+    // Initialize
+    if (stored === null) {
+        localStorage.setItem('ld_participants', JSON.stringify(participants));
     }
-
+    
     updateUI();
     lucide.createIcons();
-    applySoundIcon();
+    document.getElementById('sound-icon').setAttribute('data-lucide', soundEnabled ? 'volume-2' : 'volume-x');
     lucide.createIcons();
-</script>
+  </script>
  </body>
 </html>
